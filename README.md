@@ -343,6 +343,12 @@ If these skills save you time or improve your workflow, you can support ongoing 
 
 Support helps keep the collection current with new Apple releases, evolving framework APIs, updated examples, and compatibility work across Claude Code, Codex, Cursor, Copilot, and other agents.
 
+## Sponsors
+
+Thanks to the following people for supporting this project:
+
+<a href="https://github.com/AnthonyJrWTF"><img src="https://github.com/AnthonyJrWTF.png" width="60" alt="Anthony Jr."></a>
+
 ## License
 
 [PolyForm Perimeter 1.0.0](https://polyformproject.org/licenses/perimeter/1.0.0/) -- see [LICENSE](LICENSE)
