@@ -175,8 +175,8 @@ struct RatingIndicator: View {
 
     var body: some View {
         Text(label)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal)
+            .padding(.vertical)
             .background(color.opacity(0.2))
             .foregroundStyle(color)
             .clipShape(Capsule())

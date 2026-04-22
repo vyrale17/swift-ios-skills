@@ -98,8 +98,9 @@ extension AppAttestManager {
                 return try await attestKey()
             } catch let error as DCError where error.code == .serverUnavailable {
                 lastError = error
-                let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
-                try await Task.sleep(nanoseconds: delay)
+                if attempt < maxAttempts - 1 {
+                    try await Task.sleep(for: .seconds(pow(2.0, Double(attempt + 1))))
+                }
             } catch {
                 throw error // Non-retryable errors propagate immediately
             }

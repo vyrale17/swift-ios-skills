@@ -60,15 +60,11 @@ final class EnergyManager {
 
             do {
                 for try await guidance in service.guidance(using: query, at: venueID) {
-                    await MainActor.run {
-                        self?.currentGuidance = guidance
-                        self?.guidanceValues = guidance.values
-                    }
+                    self?.currentGuidance = guidance
+                    self?.guidanceValues = guidance.values
                 }
             } catch {
-                await MainActor.run {
-                    self?.errorMessage = error.localizedDescription
-                }
+                self?.errorMessage = error.localizedDescription
             }
         }
     }
@@ -414,8 +410,8 @@ struct EnergyDashboardView: View {
         return Text(label)
             .font(.caption)
             .fontWeight(.medium)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal)
+            .padding(.vertical)
             .background(color.opacity(0.15))
             .foregroundStyle(color)
             .clipShape(Capsule())
@@ -462,25 +458,23 @@ Comprehensive error handling with retry logic.
 @Observable
 @MainActor
 final class ResilientEnergyService {
-    private var retryCount = 0
     private let maxRetries = 3
 
     func fetchGuidanceWithRetry(venueID: UUID) async throws -> ElectricityGuidance? {
         let query = ElectricityGuidance.Query(suggestedAction: .shift)
         let service = ElectricityGuidance.sharedService
 
-        while retryCount < maxRetries {
+        for attempt in 0..<maxRetries {
             do {
                 for try await guidance in service.guidance(using: query, at: venueID) {
-                    retryCount = 0
                     return guidance
                 }
             } catch let error as EnergyKitError {
                 switch error {
                 case .serviceUnavailable, .rateLimitExceeded:
-                    retryCount += 1
-                    let delay = UInt64(pow(2.0, Double(retryCount))) * 1_000_000_000
-                    try await Task.sleep(nanoseconds: delay)
+                    if attempt < maxRetries - 1 {
+                        try await Task.sleep(for: .seconds(pow(2.0, Double(attempt + 1))))
+                    }
                 case .unsupportedRegion, .permissionDenied, .venueUnavailable:
                     throw error  // Do not retry permanent failures
                 default:
