@@ -18,6 +18,7 @@ needs.
 - [Pagination](#pagination)
 - [Network Reachability](#network-reachability)
 - [Configuring URLSession](#configuring-urlsession)
+- [App Transport Security (ATS)](#app-transport-security-ats)
 - [Common Mistakes](#common-mistakes)
 - [Review Checklist](#review-checklist)
 - [References](#references)
@@ -366,6 +367,41 @@ a network path instead of failing immediately when offline. Combine with
 `urlSession(_:taskIsWaitingForConnectivity:)` delegate callback for UI
 feedback.
 
+## App Transport Security (ATS)
+
+ATS enforces HTTPS for all connections by default. Do not disable it.
+
+### Requirements
+
+- TLS 1.2 or later
+- Forward secrecy cipher suites (ECDHE)
+- SHA-256 or better certificates
+- 2048-bit or greater RSA keys (or 256-bit ECC)
+
+### Exception Domains (Last Resort)
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSExceptionDomains</key>
+    <dict>
+        <key>legacy-api.example.com</key>
+        <dict>
+            <key>NSExceptionAllowsInsecureHTTPLoads</key>
+            <true/>
+            <key>NSExceptionMinimumTLSVersion</key>
+            <string>TLSv1.2</string>
+        </dict>
+    </dict>
+</dict>
+```
+
+**Rules:**
+- Never set `NSAllowsArbitraryLoads` to `true` in production. App Review will reject it without justification.
+- Exception domains require justification in App Review notes.
+- Use exception domains only for third-party servers you cannot upgrade to HTTPS.
+- `NSAllowsLocalNetworking` is acceptable for local device communication (Bonjour, IoT).
+
 ## Common Mistakes
 
 **DON'T:** Use `URLSession.shared` with custom configuration needs.
@@ -439,3 +475,5 @@ a 500 with an error body require different handling.
   and preview support).
 - See [references/network-framework.md](references/network-framework.md) for Network.framework (NWConnection,
   NWListener, NWBrowser, NWPathMonitor) and low-level TCP/UDP/WebSocket patterns.
+- See [references/file-storage-patterns.md](references/file-storage-patterns.md) for file system directory
+  selection, FileProtectionType, backup exclusion, and storage pressure handling.
