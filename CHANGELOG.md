@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.3.0
+
+### New skills
+
+- `core-data` — Core Data persistence: NSPersistentContainer stack setup, NSFetchedResultsController, batch operations, persistent history tracking, staged migration (iOS 17+), composite attributes, testing patterns
+- `swift-architecture` — Architecture pattern selection: MV (@Observable), MVVM, MVI, TCA, Clean Architecture, Coordinator pattern, decision framework, migration guidance
+- `swift-formatstyle` — FormatStyle protocol and all concrete types: numbers, currency, percentages, dates, durations, measurements, person names, lists, byte counts, URLs, custom FormatStyle
+- `focus-engine` — SwiftUI and UIKit focus behavior including `@FocusState`, `defaultFocus`, `focusedSceneValue`, `focusSection()`, focus restoration, and `UIFocusGuide`
+
+### Skill updates
+
+- `focus-engine` — Expand description to cover tvOS, watchOS, visionOS, macOS. Add references/multi-platform-focus.md (tvOS geometric model, watchOS Digital Crown, visionOS gaze/hover, macOS key view loop) and references/focus-debugging.md (UIFocusDebugger LLDB commands, anti-patterns)
+- `ios-accessibility` — Add AppKit accessibility coverage for `NSAccessibilityProtocol`, `NSAccessibilityElement`, and AppKit accessibility notifications. Clarify that keyboard and directional focus belong in `focus-engine`. Add references/nutrition-labels.md (all 9 App Store Accessibility Nutrition Labels with pass/fail criteria) and references/media-accessibility.md (captions, audio descriptions, AVMediaCharacteristic, SDH)
+- `swift-testing` — Add explicit execution-model guidance for default parallel execution, shared-state hazards, and `.serialized` scope semantics. Add CustomTestStringConvertible and @available-conditional test patterns to testing-patterns.md reference
+- `swift-concurrency` — Add references/bridging-interop.md (checked continuations, delegate bridging, GCD migration table), references/diagnostics.md (compiler diagnostic → fix reference, strict concurrency adoption), references/async-algorithms.md (swift-async-algorithms: debounce, throttle, merge, combineLatest, chunks)
+- `swiftdata` — Add references/predicate-pitfalls.md (#Predicate runtime crashes and unsupported expressions) and references/indexing.md (#Index macro, compound indexes, when to index)
+- `swiftui-performance` — Add ternary-modifier pattern for preserving structural identity (avoid _ConditionalContent when toggling modifiers)
+- `swiftui-patterns` — Replace primary custom environment example with modern `@Entry` guidance. Update design-polish haptics guidance to prefer SwiftUI `sensoryFeedback(_:trigger:)` and narrow the focus section to form-focus basics. Expand deprecated-migration.md with cornerRadius → clipShape, tabItem → Tab (iOS 18+), scrollIndicators(.hidden)
+
+### Bundle changes
+
+- Add `focus-engine` to `swiftui-skills` and `all-ios-skills` bundles.
+- Add `core-data`, `swift-architecture`, `swift-formatstyle` to `swift-core-skills` and `all-ios-skills` bundles.
+- Update `all-ios-skills` count from 79 to 83.
+- Update `swiftui-skills` bundle description to include focus coverage.
+
+### Repository
+
+- Add AGENTS.md with repo-level agent instructions for skill authoring
+- Update README catalog, bundle table, install count, and skill listings for new skills.
+
 ## v3.2.0
 
 ### New skills
@@ -104,7 +135,7 @@
 
 ### Bundle changes
 
-- Add `apple-kit-skills` bundle containing all 39 Apple Kit framework skills.
+- Add `apple-kit-skills` bundle containing 39 skills spanning Apple Kit frameworks plus CarPlay.
 - Add `ios-gaming-skills` bundle containing `gamekit`, `spritekit`, `scenekit`, `tabletopkit`.
 - Distribute new skills into existing themed bundles.
 - Update `all-ios-skills` count from 57 to 76.
