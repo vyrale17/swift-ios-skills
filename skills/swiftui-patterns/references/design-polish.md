@@ -120,10 +120,10 @@ Use system font styles for automatic Dynamic Type support:
 
 | Style | Size | Weight | Usage |
 |-------|------|--------|-------|
-| `.largeTitle` | 34pt | Bold | Screen titles |
-| `.title` | 28pt | Semibold | Section headers |
-| `.title2` | 22pt | Semibold | Sub-section headers |
-| `.title3` | 20pt | Semibold | Group headers |
+| `.largeTitle` | 34pt | Regular | Screen titles |
+| `.title` | 28pt | Regular | Section headers |
+| `.title2` | 22pt | Regular | Sub-section headers |
+| `.title3` | 20pt | Regular | Group headers |
 | `.headline` | 17pt | Semibold | Row titles |
 | `.body` | 17pt | Regular | Primary content |
 | `.callout` | 16pt | Regular | Secondary content |
@@ -172,7 +172,7 @@ ContentView()
     .tint(.blue)
 ```
 
-Use `Color.accentColor` for interactive elements and `Color.red` for destructive actions.
+Use `.tint(...)` or `.foregroundStyle(.tint)` for interactive elements and `Color.red` for destructive actions.
 
 ### Navigation Patterns
 
@@ -233,16 +233,22 @@ Use `TabView` with a `NavigationStack` per tab. See the `swiftui-navigation` ski
 
 #### Haptic Feedback
 
+Prefer SwiftUI's `sensoryFeedback(_:trigger:)` for state-driven feedback in SwiftUI views.
+
 ```swift
-// Impact
-UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+Button("Save") {
+    didSave.toggle()
+}
+.sensoryFeedback(.success, trigger: didSave)
 
-// Notification
-UINotificationFeedbackGenerator().notificationOccurred(.success)
-
-// Selection
-UISelectionFeedbackGenerator().selectionChanged()
+Picker("Sort", selection: $sortOrder) {
+    Text("Recent").tag(SortOrder.recent)
+    Text("Popular").tag(SortOrder.popular)
+}
+.sensoryFeedback(.selection, trigger: sortOrder)
 ```
+
+Use the UIKit generators only when you need imperative feedback from UIKit or non-SwiftUI integration points.
 
 See the Haptics section below for structured patterns.
 
@@ -327,7 +333,7 @@ Provide a clean, scalable theming approach that keeps view code semantic and con
 - Inject theme at the app root and read it via `@Environment(Theme.self)` in views.
 - Prefer semantic colors (`primaryBackground`, `secondaryBackground`, `label`, `tint`) instead of raw colors.
 - Keep user-facing theme controls in a dedicated settings screen.
-- Apply Dynamic Type scaling through custom fonts or `.font(.scaled...)`.
+- Apply Dynamic Type scaling through text styles, `Font.custom(_:size:relativeTo:)`, or `@ScaledMetric` for numeric layout values.
 
 ### Example: Theme object
 
@@ -395,11 +401,29 @@ Use haptics sparingly to reinforce user actions (tab selection, refresh, success
 
 ### Core patterns
 
-- Centralize haptic triggers in a `HapticManager` or similar utility.
+- Prefer `sensoryFeedback(_:trigger:)` in SwiftUI views for state-driven feedback.
+- Centralize imperative feedback in a `HapticManager` only when UIKit interop or non-view code requires it.
 - Gate haptics behind user preferences and hardware support.
 - Use distinct types for different UX moments (selection vs. notification vs. refresh).
+- Escalate to Core Haptics only for custom patterns that exceed SwiftUI's built-in feedback types.
 
-### Example: simple haptic manager
+### SwiftUI-first pattern
+
+```swift
+struct SaveButton: View {
+  @State private var saveToken = 0
+
+  var body: some View {
+    Button("Save") {
+      persistChanges()
+      saveToken += 1
+    }
+    .sensoryFeedback(.success, trigger: saveToken)
+  }
+}
+```
+
+### UIKit interop pattern
 
 ```swift
 @MainActor
@@ -720,6 +744,8 @@ VStack {
 ```
 
 ## Focus Handling
+
+This file covers basic form-focus patterns only. For directional focus, focus sections, scene-focused values, and `UIFocusGuide`, see the `focus-engine` skill.
 
 ### Intent
 

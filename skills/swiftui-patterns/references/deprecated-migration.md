@@ -1141,3 +1141,102 @@ Constant-range `ForEach(0..<n)` is only safe when the range never changes. For d
 ### Migration Notes
 
 `.navigationBarLeading` and `.navigationBarTrailing` were renamed to `.topBarLeading` and `.topBarTrailing` (iOS 16+). The new names work consistently across NavigationStack and NavigationSplitView contexts. Prefer the new names for cross-platform consistency.
+
+---
+
+## cornerRadius to clipShape(.rect(cornerRadius:))
+
+`.cornerRadius(_:)` was deprecated in iOS 17.
+
+### Before (Deprecated)
+
+```swift
+RoundedRectangle(cornerRadius: 12)
+    .cornerRadius(12)
+
+Image("photo")
+    .cornerRadius(8)
+```
+
+### After (Modern)
+
+```swift
+RoundedRectangle(cornerRadius: 12)
+    .clipShape(.rect(cornerRadius: 12))
+
+Image("photo")
+    .clipShape(.rect(cornerRadius: 8))
+```
+
+### Migration Notes
+
+`clipShape(.rect(cornerRadius:))` uses `RoundedRectangle` under the hood and also supports `cornerRadii` for per-corner control (iOS 16+):
+
+```swift
+.clipShape(.rect(cornerRadii: .init(topLeading: 12, bottomTrailing: 12)))
+```
+
+---
+
+## tabItem to Tab (iOS 18+)
+
+The `tabItem` modifier approach was superseded by the `Tab` type inside `TabView` (iOS 18+).
+
+### Before (Legacy)
+
+```swift
+TabView {
+    HomeView()
+        .tabItem {
+            Label("Home", systemImage: "house")
+        }
+    SettingsView()
+        .tabItem {
+            Label("Settings", systemImage: "gear")
+        }
+}
+```
+
+### After (Modern — iOS 18+)
+
+```swift
+TabView {
+    Tab("Home", systemImage: "house") {
+        HomeView()
+    }
+    Tab("Settings", systemImage: "gear") {
+        SettingsView()
+    }
+}
+```
+
+### Migration Notes
+
+`Tab` provides a cleaner API and is required for the new tab sidebar on iPadOS 18+. The `tabItem` modifier still works but does not support the sidebar presentation. Use `Tab` with a `value` parameter and `@State` selection for programmatic tab switching. `TabSection` groups tabs in the sidebar.
+
+---
+
+## scrollIndicators(.hidden) Replaces showsIndicators Parameter
+
+The `showsIndicators` parameter on `ScrollView` is available but the `scrollIndicators` modifier (iOS 16+) is preferred for consistency.
+
+### Before
+
+```swift
+ScrollView(.vertical, showsIndicators: false) {
+    content
+}
+```
+
+### After (Modern)
+
+```swift
+ScrollView {
+    content
+}
+.scrollIndicators(.hidden)
+```
+
+### Migration Notes
+
+`.scrollIndicators(_:axes:)` accepts `.automatic`, `.visible`, `.hidden`, and `.never`. It also works on `List` and `TextEditor`. The `axes` parameter lets you control horizontal and vertical indicators independently.
