@@ -1,0 +1,88 @@
+{
+  "instructions": [
+    {
+      "instruction": "Use AccessorySetupKit for privacy-preserving Bluetooth and Wi-Fi accessory discovery and authorization, then use CoreBluetooth or NetworkExtension only after setup for communication.",
+      "original_snippets": "Privacy-preserving accessory discovery and setup for Bluetooth and Wi-Fi devices... After setup, apps continue using CoreBluetooth and NetworkExtension for communication.",
+      "relevant_when": "When designing accessory onboarding for Bluetooth or Wi-Fi devices on iOS/iPadOS.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Add NSAccessorySetupSupports with Bluetooth and/or WiFi, plus matching Bluetooth service/name/company identifier keys for Bluetooth discovery.",
+      "original_snippets": "Add these keys to the app's Info.plist... NSAccessorySetupSupports... NSAccessorySetupBluetoothServices... NSAccessorySetupBluetoothNames... NSAccessorySetupBluetoothCompanyIdentifiers",
+      "relevant_when": "When configuring an app target for AccessorySetupKit discovery.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Keep Bluetooth descriptor values aligned with Info.plist declarations; undeclared identifiers, names, or services crash during AccessorySetupKit discovery.",
+      "original_snippets": "The Bluetooth-specific keys must match the values used in ASDiscoveryDescriptor... app crashes during AccessorySetupKit discovery.",
+      "relevant_when": "When writing or reviewing ASDiscoveryDescriptor and plist setup.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "A Bluetooth descriptor needs at least bluetoothCompanyIdentifier or bluetoothServiceUUID; name substring, manufacturer data, and service data are narrower matchers with dependencies.",
+      "original_snippets": "A Bluetooth descriptor needs at least one of bluetoothCompanyIdentifier or bluetoothServiceUUID. Add narrower matchers as needed...",
+      "relevant_when": "When creating Bluetooth discovery descriptors.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Manufacturer data blob and mask require a company identifier and matching lengths; service data blob and mask require a service UUID and matching lengths.",
+      "original_snippets": "bluetoothManufacturerDataBlob and bluetoothManufacturerDataMask with a company identifier... bluetoothServiceDataBlob and bluetoothServiceDataMask with a service UUID...",
+      "relevant_when": "When matching Bluetooth accessories by manufacturer data or service data.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "For Wi-Fi descriptors, supply either ssid or ssidPrefix, not both, and include WiFi support in NSAccessorySetupSupports.",
+      "original_snippets": "Supply either ssid or ssidPrefix, not both... For Wi-Fi accessories, include WiFi in NSAccessorySetupSupports...",
+      "relevant_when": "When configuring Wi-Fi accessory discovery.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Create and activate ASAccessorySession, wait for .activated before reading session.accessories or presenting the picker, and handle events with @unknown default.",
+      "original_snippets": "Create and activate an ASAccessorySession... Wait for .activated before reading session.accessories or presenting the picker... @unknown default",
+      "relevant_when": "When implementing the AccessorySetupKit session lifecycle.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Use ASPickerDisplayItem with name, product image, and descriptor; present picker from explicit user action.",
+      "original_snippets": "Create ASPickerDisplayItem instances with a name, product image, and discovery descriptor... DON'T: Show the picker without user intent",
+      "relevant_when": "When presenting accessory setup UI.",
+      "why_given": "preference"
+    },
+    {
+      "instruction": "When continuing setup UI, store the accessory from .accessoryAdded and act after .pickerDidDismiss.",
+      "original_snippets": "When the user selects an accessory, .accessoryAdded fires before .pickerDidDismiss... store the accessory on the first event and act on it after dismissal",
+      "relevant_when": "When app-side setup continues after the system picker closes.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Use ASAccessory.bluetoothIdentifier with CoreBluetooth after selection; CoreBluetooth scans only return paired AccessorySetupKit accessories and no broad Bluetooth prompt is needed when using AccessorySetupKit exclusively.",
+      "original_snippets": "After an accessory is added via the picker, use CoreBluetooth... bluetoothIdentifier... No NSBluetoothAlwaysUsageDescription is needed when using AccessorySetupKit exclusively",
+      "relevant_when": "When connecting to a selected Bluetooth accessory after setup.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Use ASAccessory.ssid with NEHotspotConfiguration for Wi-Fi accessories after selection.",
+      "original_snippets": "For Wi-Fi accessories, the ssid on the ASAccessory identifies the network. Use NEHotspotConfiguration...",
+      "relevant_when": "When connecting to a selected Wi-Fi accessory after setup.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "For migration, use ASMigrationDisplayItem, do not initialize CBCentralManager before migration completes, and wait for .migrationComplete.",
+      "original_snippets": "Apps with existing CoreBluetooth-authorized accessories can migrate... Do not initialize CBCentralManager before migration completes... .migrationComplete",
+      "relevant_when": "When migrating existing CoreBluetooth-authorized accessories to AccessorySetupKit.",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Keep HomeKit/Matter, general CoreBluetooth implementation, and general NetworkExtension guidance outside AccessorySetupKit except for post-setup handoff boundaries.",
+      "original_snippets": "After setup, apps continue using CoreBluetooth and NetworkExtension for communication. AccessorySetupKit handles only the discovery and authorization step.",
+      "relevant_when": "When a task overlaps adjacent Apple accessory domains.",
+      "why_given": "preference"
+    },
+    {
+      "instruction": "Custom filtering uses ASPickerDisplaySettings on iOS 26+ and ASDiscoveredAccessory, ASDiscoveredDisplayItem, updatePicker, and finishPickerDiscovery on iOS 26.1+.",
+      "original_snippets": "use custom filtering with ASPickerDisplaySettings on iOS 26+... requires ASDiscoveredAccessory, ASDiscoveredDisplayItem, updatePicker, and finishPickerDiscovery on iOS 26.1+",
+      "relevant_when": "When filtering discovered accessories using advertisement data before showing picker results.",
+      "why_given": "new knowledge"
+    }
+  ]
+}
