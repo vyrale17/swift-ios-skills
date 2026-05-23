@@ -1,6 +1,6 @@
 ---
 name: accessorysetupkit
-description: "Discover and configure Bluetooth and Wi-Fi accessories using AccessorySetupKit. Use when presenting a privacy-preserving accessory picker, defining discovery descriptors for BLE or Wi-Fi devices, handling accessory session events, migrating from CoreBluetooth permission-based scanning, or setting up accessories without requiring broad Bluetooth permissions."
+description: "Discover and configure Bluetooth and Wi-Fi accessories using AccessorySetupKit. Use when presenting a privacy-preserving accessory picker, defining discovery descriptors for BLE or Wi-Fi devices, handling accessory session events, migrating from CoreBluetooth permission-based scanning, or setting up accessories without requiring broad Bluetooth permissions. Do not use for HomeKit/Matter homes, rooms, characteristics, automations, or Matter commissioning; route those to HomeKit/Matter guidance."
 ---
 
 # AccessorySetupKit
@@ -14,8 +14,26 @@ After setup, apps continue using CoreBluetooth and NetworkExtension for
 communication. AccessorySetupKit handles only the discovery and authorization
 step.
 
+## Boundaries
+
+AccessorySetupKit owns the lower-level Bluetooth/Wi-Fi setup path: discovery
+descriptors, the system picker, per-accessory authorization, `ASAccessorySession`
+lifecycle events, migration from CoreBluetooth-authorized accessories, and the
+handoff into app-controlled transport setup.
+
+Route HomeKit and Matter work to HomeKit/Matter guidance instead. Homes, rooms,
+`HMAccessory` services and characteristics, action sets, triggers, automations,
+and Matter onboarding or commissioning are not AccessorySetupKit responsibilities,
+even when the physical device advertises over Bluetooth or Wi-Fi during setup.
+
+After an ASK setup completes, use `ASAccessory.bluetoothIdentifier` with
+CoreBluetooth for Bluetooth communication, or `ASAccessory.ssid` with
+NetworkExtension / `NEHotspotConfiguration` for Wi-Fi communication. Do not treat
+that handoff as HomeKit automation or Matter commissioning logic.
+
 ## Contents
 
+- [Boundaries](#boundaries)
 - [Setup and Entitlements](#setup-and-entitlements)
 - [Discovery Descriptors](#discovery-descriptors)
 - [Presenting the Picker](#presenting-the-picker)
@@ -358,6 +376,14 @@ Migration rules:
 
 ## Common Mistakes
 
+### DON'T: Use AccessorySetupKit for HomeKit or Matter app logic
+
+If the task is about homes, rooms, `HMAccessory` characteristics, scenes/action
+sets, triggers, automations, or Matter commissioning, route it to HomeKit/Matter
+guidance. Mention AccessorySetupKit only when the task specifically needs
+Bluetooth/Wi-Fi discovery, picker authorization, session events, migration, or
+post-setup handoff to CoreBluetooth/NetworkExtension.
+
 ### DON'T: Omit Info.plist keys for Bluetooth discovery
 
 The app crashes if it uses identifiers, names, or services in descriptors that
@@ -445,6 +471,7 @@ newSession.activate(on: .main) { event in
 - [ ] Picker presentation tied to explicit user action, not automatic
 - [ ] `CBCentralManager` not initialized until after migration completes (if migrating)
 - [ ] `bluetoothIdentifier` or `ssid` from `ASAccessory` used to connect post-setup
+- [ ] HomeKit/Matter homes, rooms, characteristics, automations, and commissioning routed to HomeKit/Matter guidance instead of this skill
 - [ ] Invalidated sessions replaced with new instances
 - [ ] Accessory removal events handled to clean up app state
 
