@@ -11,4 +11,12 @@ firebase-debug.log
 .github/skills
 .serena
 .vscode
-.tessl/RULES.md
+# Tessl local install/cache state. Root evals/ scenarios stay tracked for tile evals.
+.tessl/
+
+# AgentSkills/skill-creator generated eval run artifacts.
+skills/*-workspace/
+
+# Keep only source eval definitions beside skills; generated scenario staging stays local.
+skills/*/evals/*
+!skills/*/evals/evals.json
