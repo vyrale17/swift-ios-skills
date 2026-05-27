@@ -53,7 +53,7 @@ class DrawingController: UIViewController, PKToolPickerObserver {
 Create custom tools with unique behaviors and icons.
 
 ```swift
-let customConfig = PKToolPickerCustomItem.Configuration(
+var customConfig = PKToolPickerCustomItem.Configuration(
     identifier: "com.app.highlighter",
     name: "Highlighter"
 )
@@ -222,24 +222,25 @@ let version = drawing.requiredContentVersion
 
 switch version {
 case .version1:
-    // Basic inks: pen, pencil, marker
+    // iPadOS 14-and-earlier inks: marker, pen, pencil
     break
 case .version2:
-    // Adds monoline and fountain pen
+    // iPadOS 17 inks: marker, pen, pencil, monoline, fountain pen,
+    // watercolor, and crayon
     break
 case .version3:
-    // Adds watercolor and crayon
+    // Adds barrel-roll angle data
     break
 case .version4:
-    // Latest inks including reed
+    // Adds Reed Pen
     break
 @unknown default:
     break
 }
 
-// Limit canvas to a specific version
-canvasView.maximumSupportedContentVersion = .version2
-toolPicker.maximumSupportedContentVersion = .version2
+// Limit editing and selectable tools to a specific version
+canvasView.maximumSupportedContentVersion = .version1
+toolPicker.maximumSupportedContentVersion = .version1
 ```
 
 ## Advanced SwiftUI Wrapper
