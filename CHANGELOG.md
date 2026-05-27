@@ -5,6 +5,7 @@
 ### Skill updates
 
 - `authentication` -- Add passkey registration/sign-in guidance with platform passkeys, AutoFill-assisted requests, and physical security key boundaries; tighten OAuth presentation-anchor and biometric/keychain guidance.
+- `cryptokit` -- Add source-grounded HPKE, SHA-3, and iOS 26 post-quantum CryptoKit coverage; clarify Secure Enclave P256 versus ML-KEM/ML-DSA support and add retained eval scenarios.
 
 ## v3.5.0
 
