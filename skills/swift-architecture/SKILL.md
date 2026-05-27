@@ -5,11 +5,11 @@ description: "Select, implement, or migrate between app architecture patterns fo
 
 # Swift Architecture
 
-Select and implement the right architecture pattern for Apple platform apps
-built with Swift 6.3 and SwiftUI or UIKit.
+Select and implement the right architecture pattern for Apple platform apps built with Swift 6.3 and SwiftUI or UIKit.
 
 ## Contents
 
+- [Scope Boundary](#scope-boundary)
 - [Architecture Selection](#architecture-selection)
 - [MV Pattern (Model-View with `@Observable`)](#mv-pattern)
 - [MVVM](#mvvm)
@@ -17,13 +17,28 @@ built with Swift 6.3 and SwiftUI or UIKit.
 - [TCA (The Composable Architecture)](#tca)
 - [Clean Architecture](#clean-architecture)
 - [Coordinator Pattern](#coordinator-pattern)
+- [VIPER](#viper)
 - [Migration Between Patterns](#migration-between-patterns)
 - [Common Mistakes](#common-mistakes)
 - [Review Checklist](#review-checklist)
+- [References](#references)
+
+## Scope Boundary
+
+This skill owns architecture selection, pattern tradeoffs,
+module boundaries, dependency direction, and migration strategy. Use
+`swiftui-patterns` for detailed SwiftUI state ownership and view composition,
+`swiftui-navigation` for `NavigationStack`, sheets, tabs, and deep-link routing,
+`swift-concurrency` for actor isolation and data-race diagnostics, and
+`swift-testing` for full test harness patterns.
+
+When a request mixes architecture with implementation detail, keep the
+architecture decision here and name handoffs: edit-sheet state, bindings, and
+view composition go to `swiftui-patterns`; route enums, sheets, tabs, and deep
+links go to `swiftui-navigation`; `@MainActor`, `Sendable`, diagnostics, and
+test-suite mechanics go to `swift-concurrency` or `swift-testing`.
 
 ## Architecture Selection
-
-Choose based on feature complexity, team size, and testing requirements.
 
 | Pattern | Best For | Complexity | Testability |
 |---------|----------|-----------|-------------|
@@ -33,10 +48,17 @@ Choose based on feature complexity, team size, and testing requirements.
 | **TCA** | Large apps needing composable features, strong testing | High | Very High |
 | **Clean Architecture** | Enterprise apps, strict separation of concerns | High | Very High |
 | **Coordinator** | Apps with complex navigation flows (UIKit or hybrid) | Medium | High |
+| **VIPER** | Legacy UIKit modules already using VIPER boundaries | Very High | High |
 
 **Default recommendation for new SwiftUI apps:** Start with MV (Model-View
 with `@Observable`). Escalate to MVVM or TCA only when the feature's complexity
 demands it.
+
+Architecture-selection answers that defer implementation detail must name
+sibling skill IDs; phrases like "SwiftUI state design" are insufficient. Route
+edit sheets, bindings, local view state, and composition to `swiftui-patterns`;
+sheet routing, `NavigationStack`, route enums, and deep links to
+`swiftui-navigation`.
 
 ### Decision Framework
 
@@ -51,14 +73,13 @@ demands it.
 The simplest SwiftUI architecture. The view observes `@Observable` models
 directly. No intermediate view model layer.
 
-Docs: [`@Observable`](https://sosumi.ai/documentation/observation/observable())
-
 ```swift
 import Observation
 import SwiftUI
 
+@MainActor
 @Observable
-class TripStore {
+final class TripStore {
     var trips: [Trip] = []
     var isLoading = false
     var error: Error?
@@ -110,8 +131,9 @@ Separates view logic into a `ViewModel` that the view observes. The view model
 transforms model data for display and handles user actions.
 
 ```swift
+@MainActor
 @Observable
-class TripListViewModel {
+final class TripListViewModel {
     private(set) var trips: [TripRowItem] = []
     private(set) var isLoading = false
     var searchText = ""
@@ -198,8 +220,9 @@ Unidirectional data flow: views dispatch **intents**, a **reducer** produces
 new **state**, and **side effects** are handled explicitly.
 
 ```swift
+@MainActor
 @Observable
-class TripListStore {
+final class TripListStore {
     private(set) var state = State()
 
     struct State {
@@ -224,7 +247,6 @@ class TripListStore {
         Task { await handle(intent) }
     }
 
-    @MainActor
     private func handle(_ intent: Intent) async {
         switch intent {
         case .loadTrips:
@@ -266,11 +288,13 @@ struct TripList {
     struct State: Equatable {
         var trips: IdentifiedArrayOf<Trip> = []
         var isLoading = false
+        var errorMessage: String?
     }
 
     enum Action {
         case onAppear
         case tripsLoaded([Trip])
+        case tripsFailed(String)
         case deleteTrip(Trip.ID)
     }
 
@@ -281,12 +305,21 @@ struct TripList {
             switch action {
             case .onAppear:
                 state.isLoading = true
+                state.errorMessage = nil
                 return .run { send in
-                    let trips = try await tripClient.fetchAll()
-                    await send(.tripsLoaded(trips))
+                    do {
+                        let trips = try await tripClient.fetchAll()
+                        await send(.tripsLoaded(trips))
+                    } catch {
+                        await send(.tripsFailed(error.localizedDescription))
+                    }
                 }
             case .tripsLoaded(let trips):
                 state.trips = IdentifiedArray(uniqueElements: trips)
+                state.isLoading = false
+                return .none
+            case .tripsFailed(let message):
+                state.errorMessage = message
                 state.isLoading = false
                 return .none
             case .deleteTrip(let id):
@@ -341,8 +374,9 @@ struct RemoteTripRepository: TripRepository {
 }
 
 // Presentation layer
+@MainActor
 @Observable
-class UpcomingTripsViewModel {
+final class UpcomingTripsViewModel {
     private(set) var trips: [Trip] = []
     private let useCase: FetchUpcomingTripsUseCase
 
@@ -365,48 +399,29 @@ dependencies, or multiple presentation targets share the same business logic.
 Separates navigation logic from views. Especially useful in UIKit or hybrid
 apps with complex navigation flows.
 
-```swift
-@MainActor
-protocol Coordinator: AnyObject {
-    var navigationController: UINavigationController { get }
-    func start()
-}
-
-@MainActor
-final class TripCoordinator: Coordinator {
-    let navigationController: UINavigationController
-    private let repository: TripRepository
-
-    init(navigationController: UINavigationController, repository: TripRepository) {
-        self.navigationController = navigationController
-        self.repository = repository
-    }
-
-    func start() {
-        let vm = TripListViewModel(repository: repository)
-        vm.onSelectTrip = { [weak self] trip in
-            self?.showDetail(for: trip)
-        }
-        let vc = TripListViewController(viewModel: vm)
-        navigationController.pushViewController(vc, animated: false)
-    }
-
-    private func showDetail(for trip: Trip) {
-        let vm = TripDetailViewModel(trip: trip, repository: repository)
-        vm.onEdit = { [weak self] trip in self?.showEditor(for: trip) }
-        let vc = TripDetailViewController(viewModel: vm)
-        navigationController.pushViewController(vc, animated: true)
-    }
-
-    private func showEditor(for trip: Trip) {
-        // ...
-    }
-}
-```
+Keep Coordinators `@MainActor`, inject dependencies at coordinator creation,
+and pass user-selection callbacks from view models or controllers back to the
+coordinator. The coordinator owns push/modal decisions; feature models own
+business logic.
 
 In pure SwiftUI apps, `NavigationStack` with path-based routing often
 replaces the Coordinator pattern. Use Coordinators when you need UIKit
 integration or shared navigation logic across platforms.
+
+## VIPER
+
+VIPER splits a feature into **View**, **Interactor**, **Presenter**,
+**Entity**, and **Router** roles. Treat it as a maintenance pattern for apps
+that already have strict UIKit module boundaries rather than a default for new
+SwiftUI work.
+
+**Use VIPER when:** An existing UIKit codebase already organizes screens as
+VIPER modules, teams need explicit handoff contracts between presentation,
+business logic, and routing, or a migration must preserve module boundaries
+while modernizing internals.
+
+**Avoid VIPER when:** A new SwiftUI feature can use MV, MVVM, TCA, or Clean
+Architecture with fewer files and clearer data flow.
 
 ## Migration Between Patterns
 
@@ -420,12 +435,18 @@ class TripStore: ObservableObject {
 // View uses @ObservedObject or @StateObject
 
 // After (iOS 17+)
+@MainActor
 @Observable
-class TripStore {
+final class TripStore {
     var trips: [Trip] = []
 }
-// View uses @State for owned, plain property for injected
+// View uses @State for owned; plain injection or @Bindable only when needed
 ```
+
+Migration routing: keep Coordinators for UIKit or hybrid boundaries; pure
+SwiftUI flows usually own `NavigationStack`/path state. Route detailed route
+enums, sheets, tabs, and deep links to `swiftui-navigation`, actor diagnostics
+to `swift-concurrency`, and testing syntax or suites to `swift-testing`.
 
 ### MVVM → MV (simplifying)
 
@@ -448,20 +469,21 @@ in a `Reducer`, migrate its dependencies to `@Dependency`, and test.
 
 | Mistake | Fix |
 |---------|-----|
-| Using `ObservableObject` in new iOS 17+ code | Use `@Observable` instead |
+| Using `ObservableObject` in new iOS 17+ code | Use `@Observable`; isolate UI-observed types to `@MainActor` |
 | View model that only forwards model properties | Remove the view model; use MV pattern |
 | Massive view model with navigation, networking, and formatting | Split into focused collaborators (coordinator, service, formatter) |
 | Choosing TCA for a two-screen app | Start with MV; adopt TCA when composition and testing demands justify it |
 | Protocol-heavy Clean Architecture for a simple feature | Match architecture complexity to feature complexity |
 | Coordinator pattern in pure SwiftUI without UIKit needs | Use `NavigationStack` path-based routing instead |
+| Starting new SwiftUI modules with VIPER | Reserve VIPER for legacy UIKit maintenance or strict module-boundary migrations |
 | Mixing architecture patterns inconsistently within a module | One pattern per feature module; different modules can use different patterns |
 
 ## Review Checklist
 
 - [ ] Architecture choice is justified by feature complexity and team needs
-- [ ] `@Observable` used instead of `ObservableObject` for iOS 17+ targets
+- [ ] UI-observed `@Observable` types use `@MainActor`; migration distinguishes `@State`, plain injection, and `@Bindable`
 - [ ] Dependencies are injected, not created internally (testability)
-- [ ] Navigation logic is separated from business logic
+- [ ] SwiftUI state/navigation implementation handoffs name sibling skills explicitly
 - [ ] State mutations happen in a clear, auditable location
 - [ ] View models (if present) are testable without views
 - [ ] No god objects — responsibilities are distributed appropriately
@@ -470,3 +492,8 @@ in a `Reducer`, migrate its dependencies to `@Dependency`, and test.
 ## References
 
 - Apple docs: [Observation](https://sosumi.ai/documentation/observation) | [Observable](https://sosumi.ai/documentation/observation/observable())
+- Apple docs: [Migrating from ObservableObject to Observable](https://sosumi.ai/documentation/swiftui/migrating-from-the-observable-object-protocol-to-the-observable-macro)
+- Apple docs: [`State`](https://sosumi.ai/documentation/swiftui/state) | [`Bindable`](https://sosumi.ai/documentation/swiftui/bindable) | [`Environment`](https://sosumi.ai/documentation/swiftui/environment)
+- Apple docs: [`NavigationStack`](https://sosumi.ai/documentation/swiftui/navigationstack)
+- Apple docs: [Swift Testing](https://sosumi.ai/documentation/testing)
+- TCA docs: [ComposableArchitecture](https://sosumi.ai/external/https://swiftpackageindex.com/pointfreeco/swift-composable-architecture/main/documentation/composablearchitecture)
