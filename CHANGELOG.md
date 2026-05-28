@@ -6,6 +6,7 @@
 
 - `push-notifications` — Correct APNs registration vs notification authorization guidance, avoid local device-token caching, add background push headers/throttling, fix rich-notification extension setup, and add local/root eval coverage.
 - `swift-api-design-guidelines` — Tighten mutating/nonmutating pair guidance around direct-object `-ing` forms and add local/root eval coverage for API naming, documentation comments, and sibling-boundary routing.
+- `speech-recognition` — Correct SpeechAnalyzer/SpeechTranscriber iOS 26 guidance, remove unsupported preset usage, add SpeechAnalyzer progressive-disclosure reference material, and add local eval coverage.
 
 ## v3.5.0
 

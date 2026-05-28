@@ -222,7 +222,7 @@ $skill-installer install https://github.com/dpearson2699/swift-ios-skills/tree/m
 | [apple-on-device-ai](skills/apple-on-device-ai/) | Foundation Models framework, Core ML, MLX Swift, on-device LLM inference |
 | [coreml](skills/coreml/) | Core ML model loading, prediction, MLTensor, compute unit configuration, VNCoreMLRequest, MLComputePlan |
 | [natural-language](skills/natural-language/) | NLTokenizer, NLTagger, sentiment analysis, language identification, embeddings, Translation |
-| [speech-recognition](skills/speech-recognition/) | SFSpeechRecognizer, on-device recognition, audio buffer processing |
+| [speech-recognition](skills/speech-recognition/) | SpeechAnalyzer, SpeechTranscriber, SFSpeechRecognizer, on-device recognition, audio buffer processing |
 | [vision-framework](skills/vision-framework/) | Vision text recognition, face/barcode detection, image segmentation, VisionKit DataScannerViewController |
 
 ### iOS Engineering
