@@ -56,7 +56,7 @@ class Trip {
 
 **Inheritance (iOS 26+)**: `@Model class BusinessTrip: Trip { var company: String }`.
 
-Supported types: `Bool`, `Int`/`UInt` variants, `Float`, `Double`, `String`, `Date`, `Data`, `URL`, `UUID`, `Decimal`, `Array`, `Dictionary`, `Set`, `Codable` enums, `Codable` structs (composite, iOS 18+), relationships to `@Model` classes.
+Supported types: `Bool`, `Int`/`UInt` variants, `Float`, `Double`, `String`, `Date`, `Data`, `URL`, `UUID`, `Decimal`, `Array`, `Dictionary`, `Set`, `Codable` enums, `Codable` structs and other compatible `Codable` value types, and relationships to `@Model` classes.
 
 ## ModelContainer Setup
 
@@ -170,7 +170,7 @@ struct RecentView: View {
 #Predicate<Trip> { $0.tags.contains { $0.name == "adventure" } }        // Collection
 ```
 
-Supported: `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!`, `contains()`, `allSatisfy()`, `filter()`, `starts(with:)`, `localizedStandardContains()`, `caseInsensitiveCompare()`, arithmetic, ternary, optional chaining, nil coalescing, type casting. **Not supported**: flow control, nested declarations, arbitrary method calls.
+Supported: `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!`, `contains()`, `allSatisfy()`, `filter()`, `starts(with:)`, `localizedStandardContains()`, `caseInsensitiveCompare()`, arithmetic, conditional expressions, optional chaining and binding, nil coalescing, type casting. **Avoid**: loops, nested declarations, mutations, and arbitrary unsupported method calls.
 
 ## FetchDescriptor
 

@@ -485,7 +485,8 @@ let trips = try modelContext.fetch(descriptor)
 - Use `fetchCount` when only the count is needed.
 - Use `fetchIdentifiers` when only IDs are needed.
 - Use `propertiesToFetch` to limit loaded data.
-- Use `@Attribute(.externalStorage)` for `Data` properties over ~100KB.
+- Use `@Attribute(.externalStorage)` for large `Data` payloads such as images
+  and blobs.
 - Disable `includePendingChanges` if unsaved data is not needed in results.
 - Call `modelContext.save()` periodically during large imports to flush memory.
 
