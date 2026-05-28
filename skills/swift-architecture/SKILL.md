@@ -26,17 +26,16 @@ Select and implement the right architecture pattern for Apple platform apps buil
 ## Scope Boundary
 
 This skill owns architecture selection, pattern tradeoffs,
-module boundaries, dependency direction, and migration strategy. Use
-`swiftui-patterns` for detailed SwiftUI state ownership and view composition,
-`swiftui-navigation` for `NavigationStack`, sheets, tabs, and deep-link routing,
-`swift-concurrency` for actor isolation and data-race diagnostics, and
-`swift-testing` for full test harness patterns.
-
-When a request mixes architecture with implementation detail, keep the
-architecture decision here and name handoffs: edit-sheet state, bindings, and
-view composition go to `swiftui-patterns`; route enums, sheets, tabs, and deep
-links go to `swiftui-navigation`; `@MainActor`, `Sendable`, diagnostics, and
-test-suite mechanics go to `swift-concurrency` or `swift-testing`.
+module boundaries, dependency direction, and migration strategy. Use exact
+handoffs: `swiftui-patterns` for `@State`, `@Bindable`, `@Environment`,
+edit-sheet state, bindings, local view state, view composition, and SwiftUI MV
+implementation mechanics; `swiftui-navigation` for `NavigationStack`,
+`NavigationSplitView`, `NavigationPath`, route enums, route models, sheets,
+tabs, and deep-link URL handling; `swift-concurrency` for `@MainActor`, default
+MainActor isolation, `Sendable`, actor isolation, structured concurrency,
+strict-concurrency diagnostics, and data-race diagnostics; `swift-testing` for
+`@Test`, `#expect`, `#require`, fixtures, parameterized tests, mocks, stubs,
+and suite organization.
 
 ## Architecture Selection
 
@@ -56,9 +55,10 @@ demands it.
 
 Architecture-selection answers that defer implementation detail must name
 sibling skill IDs; phrases like "SwiftUI state design" are insufficient. Route
-edit sheets, bindings, local view state, and composition to `swiftui-patterns`;
-sheet routing, `NavigationStack`, route enums, and deep links to
-`swiftui-navigation`.
+edit sheets, bindings, composition, and SwiftUI MV mechanics to
+`swiftui-patterns`; `NavigationStack`, `NavigationSplitView`, route enums,
+sheets, tabs, and deep links to `swiftui-navigation`; strict-concurrency
+diagnostics, fixtures, and parameterized tests to `swift-concurrency` or `swift-testing`.
 
 ### Decision Framework
 
@@ -445,8 +445,9 @@ final class TripStore {
 
 Migration routing: keep Coordinators for UIKit or hybrid boundaries; pure
 SwiftUI flows usually own `NavigationStack`/path state. Route detailed route
-enums, sheets, tabs, and deep links to `swiftui-navigation`, actor diagnostics
-to `swift-concurrency`, and testing syntax or suites to `swift-testing`.
+enums, `NavigationSplitView`, sheets, tabs, and deep links to
+`swiftui-navigation`, strict-concurrency diagnostics to `swift-concurrency`,
+and fixtures or parameterized tests to `swift-testing`. Migrate per feature module, not app-wide by default; keep each module internally consistent while allowing different modules to use different patterns during incremental adoption.
 
 ### MVVM → MV (simplifying)
 
@@ -476,18 +477,18 @@ in a `Reducer`, migrate its dependencies to `@Dependency`, and test.
 | Protocol-heavy Clean Architecture for a simple feature | Match architecture complexity to feature complexity |
 | Coordinator pattern in pure SwiftUI without UIKit needs | Use `NavigationStack` path-based routing instead |
 | Starting new SwiftUI modules with VIPER | Reserve VIPER for legacy UIKit maintenance or strict module-boundary migrations |
-| Mixing architecture patterns inconsistently within a module | One pattern per feature module; different modules can use different patterns |
+| Mixing architecture patterns inside one feature module | Keep one pattern inside each feature module; migrate different modules independently when needed |
 
 ## Review Checklist
 
 - [ ] Architecture choice is justified by feature complexity and team needs
 - [ ] UI-observed `@Observable` types use `@MainActor`; migration distinguishes `@State`, plain injection, and `@Bindable`
 - [ ] Dependencies are injected, not created internally (testability)
-- [ ] SwiftUI state/navigation implementation handoffs name sibling skills explicitly
+- [ ] SwiftUI MV mechanics, `NavigationSplitView`, strict-concurrency diagnostics, fixtures, and parameterized tests hand off to sibling skills explicitly
 - [ ] State mutations happen in a clear, auditable location
 - [ ] View models (if present) are testable without views
 - [ ] No god objects — responsibilities are distributed appropriately
-- [ ] Pattern is consistent within each feature module
+- [ ] Pattern is consistent within each feature module, including during migrations
 
 ## References
 
